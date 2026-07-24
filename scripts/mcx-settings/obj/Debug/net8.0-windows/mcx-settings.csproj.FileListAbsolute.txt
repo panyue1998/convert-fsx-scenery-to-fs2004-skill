@@ -1,0 +1,14 @@
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\bin\Debug\net8.0-windows\mcx-settings.exe
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\bin\Debug\net8.0-windows\mcx-settings.deps.json
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\bin\Debug\net8.0-windows\mcx-settings.runtimeconfig.json
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\bin\Debug\net8.0-windows\mcx-settings.dll
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\bin\Debug\net8.0-windows\mcx-settings.pdb
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\obj\Debug\net8.0-windows\mcx-settings.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\obj\Debug\net8.0-windows\mcx-settings.AssemblyInfoInputs.cache
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\obj\Debug\net8.0-windows\mcx-settings.AssemblyInfo.cs
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\obj\Debug\net8.0-windows\mcx-settings.csproj.CoreCompileInputs.cache
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\obj\Debug\net8.0-windows\mcx-settings.dll
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\obj\Debug\net8.0-windows\refint\mcx-settings.dll
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\obj\Debug\net8.0-windows\mcx-settings.pdb
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\obj\Debug\net8.0-windows\mcx-settings.genruntimeconfig.cache
+C:\Users\1\.codex\skills\convert-fsx-scenery-to-fs2004\scripts\mcx-settings\obj\Debug\net8.0-windows\ref\mcx-settings.dll

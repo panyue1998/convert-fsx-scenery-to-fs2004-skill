@@ -1,0 +1,4 @@
+interface:
+  display_name: "FSX to FS2004 Scenery"
+  short_description: "Convert and repair FSX scenery for FS2004"
+  default_prompt: "Use $convert-fsx-scenery-to-fs2004 to guide me in Chinese or English through a non-destructive FSX scenery conversion for FS2004, starting with required SDKs and tool paths."

@@ -1,6 +1,6 @@
 ---
 name: convert-fsx-scenery-to-fs2004
-description: Convert Microsoft Flight Simulator X scenery packages into non-destructive FS2004 scenery-library packages, including BGL downgrade, airport XML recovery, flatten creation, legacy ground polygons, DDS-to-extended-BMP textures, visibility tuning, diagnostics, and validation. Use for FSX-to-FS2004 scenery conversion or repair requests in either Chinese or English.
+description: Convert Microsoft Flight Simulator X scenery packages into non-destructive FS2004 scenery-library packages, including BGL downgrade, airport XML recovery, flatten creation, legacy ground polygons, DDS-to-extended-BMP textures, visibility tuning, object-triggered global texture-blur diagnosis, and validation. Use for FSX-to-FS2004 scenery conversion or repair requests in either Chinese or English.
 ---
 
 # Convert FSX Scenery To FS2004
@@ -53,6 +53,19 @@ Explicitly confirm that BGLComp, MakeMDL, and ImageTool are FS2004 versions. Rej
 17. Proactively inspect large or nearly flat object BGLs as DAE before final installation. Classify true ground-detail models separately from buildings, but do not assume this removes FS2004 shadow artifacts.
 18. Run `scripts/validate_package.py` and complete every required build-time gate below before asking the user to test FS2004.
 
+## Optional: One Object Triggers Global Texture Blur
+
+Use this first when an object entering the view, especially at a distance, makes unrelated FS2004 textures across the scene suddenly drop to very low resolution.
+
+1. Before resizing ordinary large textures or bisecting every BGL, scan every active BMP in the target package. Rank candidates primarily by having only one usable mip level, a declared mip count or image size that disagrees with the actual payload, incomplete/extra mip data, or heavy repeated UV use across many model triangles. Use unusually small or narrow dimensions only as an additional risk signal, never as a fixed cutoff. Scan the whole package, not only the reported area.
+2. Map each candidate BMP through model material references to its library BGL and placement GUID. Treat the combined structural and usage profile as a candidate signal, not proof; filenames or dimensions alone are insufficient.
+3. Make the first simulator experiment a direct, non-destructive BMP disable. Move or rename all high-confidence candidates into a package-local holding folder, keep their BGLs active, archive/remove only the package-local `SCENERY.dat`, and restart FS2004 completely. Missing-material surfaces may turn white; that is expected and does not invalidate the test.
+4. If global blur disappears, restore candidates individually or by recorded binary search until each offender is confirmed. Assume multiple independent BMPs may exist: one positive isolated test does not prove it is the only offender. Confirm both directions when practical: the BMP enabled can trigger blur, and the full package with that BMP disabled remains clear.
+5. After confirmation, either leave the BMP disabled with documented visual loss, or rebuild it under the identical filename and aspect ratio as a power-of-two DXT1/DXT3 extended BMP no larger than 1024 with a usable mip chain. Retest before accepting the rebuild.
+6. If disabling all structural candidates does not clear the symptom, restore them and continue with recorded BGL binary search and model/material inspection. Do not keep destructive or unlogged trial states.
+
+A proven example is a `4x64` or `8x4` DXT1 BMP with only one mip, used with heavily repeated UVs across a substantial model part. These dimensions are examples, not thresholds: apply the same checks to any size when mip structure, payload declarations, and UV usage are suspicious. Such a texture can be valid-looking and fully decodable yet still provoke FS2004's global texture-resolution collapse at distance.
+
 ## Optional: Remove One Airport From A Directory
 
 Use this when the user asks to delete, hollow out, or exclude all scenery content for a specific airport inside a package or converted output while preserving other airports in the same directory.
@@ -79,7 +92,7 @@ Do not defer these checks to user-reported debugging:
 - **Placement orientation and position:** compare source and final lat/lon/alt/heading/pitch/bank/scale for sampled airport and city objects. Treat global rotation, mirrored heading, or systematic offset as a conversion bug in placement decoding, not as a manual per-building adjustment.
 - **Object targeting evidence:** for any user-reported object or direction-specific issue, document the parsed coordinates, distance/bearing to a known landmark, placement GUID, matched model library, and exact BGL/XML record before changing it. Filename or texture-name similarity alone is not enough evidence.
 - **Ground format:** rewrite all embedded ground `.dds` references, compile with SCASM, and verify final BGLs contain no `.dds` strings.
-- **Mipmaps and distance:** verify complete mip chains independently from SCA `v1` visibility; use 20 km unless the user requests another tested value.
+- **Mipmaps and distance:** verify complete mip chains independently from SCA `v1` visibility; prioritize single-mip BMPs, mip declaration/payload inconsistencies, and heavy model UV repetition, using unusual dimensions only as supporting evidence; use 20 km unless the user requests another tested value.
 - **Package integrity:** require unchanged source hashes, nonempty BGLs, valid extended BMP headers, clean compiler logs, and documented skips.
 
 ## Human-Assisted Steps
@@ -101,6 +114,7 @@ The reference records the proven handling for:
 - textures mapped onto the wrong surfaces;
 - large rectangular ground-scenery shadows;
 - ground imagery appearing only near the airport.
+- an object entering view and collapsing global texture resolution because of a suspicious single-mip or payload-inconsistent BMP combined with repeated UVs.
 
 ## Safety And Acceptance
 

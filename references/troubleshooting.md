@@ -74,6 +74,21 @@ Mandatory build-time action:
 - Use vertically flipped FS2004 BMP inputs for converted models; do not mix unflipped source DDS with already-flipped BMPs in the same rebuild pass.
 - Inspect at least one text-bearing and one alpha/cutout building after conversion. If walls, roofs, glass, or signs use the wrong bitmap, recompile the affected library before packaging.
 
+### Do not infer transparency from DDS alpha
+
+An alpha channel is data, not proof that the surface should be transparent. FSX materials may ignore alpha or use it for another rendering function, while a DAE/MakeMDL rebuild can silently reinterpret the same zero-alpha pixels as holes.
+
+Mandatory procedure:
+
+1. Decode every source texture to RGBA and count alpha `0`, alpha `1..254`, and alpha `255` pixels.
+2. Map each non-opaque texture through the source material to the exact model and surface. Inspect source blend, alpha-test, transparency, and double-sided flags.
+3. Classify the surface explicitly: opaque architecture, cutout fence/vegetation, glass, light sprite, or unknown. Stop on unknown high-area architectural alpha.
+4. For opaque architecture, preserve RGB but force alpha to `255` in a model-specific day/`_LM` copy, or rebuild the material with verified opaque semantics. Do not change the shared source-stem texture if another model legitimately uses its alpha.
+5. For cutouts, keep alpha and verify the fence/vegetation silhouette. Never make all textures in a composite model opaque.
+6. Inspect the final DXT payload, not only the header: count DXT1 selector-3 transparent pixels or decoded DXT3 alpha. Require zero for opaque surfaces.
+
+Proven failure: `Cargo_Hangars_01` and `Cargo_Hangars_02` contained source alpha even though their building surfaces were not intended to be cut out. Pixel-preserving DDS-to-BMP conversion retained the alpha correctly, but FS2004 then rendered holes. The correct prevention is material-intent classification before format selection, not assuming source alpha is authoritative.
+
 ## Prevent Wrong Building Angles Or Positions
 
 Cause: FSX placement binary decoding used the wrong heading/pitch/bank unit conversion, ignored AGL/MSL altitude semantics, swapped coordinates, or lost scale.
@@ -83,6 +98,22 @@ Mandatory build-time action:
 - Preserve lat/lon/altitudeIsAgl/alt/heading/pitch/bank/scale from the decoded placement record.
 - Validate several known buildings against the source placement data before compiling the final placement BGL.
 - Treat a systematic rotation or offset as a placement-decoder bug. Fix the conversion math and rebuild the placement BGL; do not manually rotate individual buildings unless only one source placement is demonstrably wrong.
+
+### Prevent airport-reference-point models from appearing over a runway
+
+Some FSX scenery uses the airport reference point as the placement for a large model whose vertices are already offset to their real-world site. The placement record is correct, but FS2004 can render, cull, or position kilometre-distant local geometry incorrectly. Inspect model space as well as placement space.
+
+Mandatory procedure:
+
+1. Flag every single-model BGL whose lone placement equals or nearly equals the airport reference point, especially `VERY_SPARSE` objects and files representing roads, fences, or building rows.
+2. Export the source BGL to DAE and calculate bounds from position arrays only; do not include normals, UVs, colors, or animation values.
+3. Compute the local bounding-box center `(cx, cy)` and its distance from `(0,0)`. Investigate offsets of hundreds of metres; reject kilometre-scale offsets for direct FS2004 installation.
+4. Convert the local center through the original placement heading. With local `x` east/right and `y` north/forward, use the verified model-axis convention from representative source placements; then convert east/north metres to latitude/longitude at the airport latitude.
+5. Subtract the same `(cx, cy)` from every geometry position array. Do not change UVs, normals, materials, node transforms, animation keys, or relative geometry.
+6. Compile the recentered model under a new GUID and compile a separate placement at the transformed geodetic center. Preserve heading, scale, image complexity, and the intended AGL/MSL mode; usually use AGL `0` for a grounded rebuilt object after confirming the flatten.
+7. Verify transformed min/max corners cover the intended site and no longer cross the runway. Audit adjacent reference-point BGLs for the same authoring pattern.
+
+Proven failure: a roughly 707 m building row and a separate roughly 1.16 km fence/road model were both placed at the RKSS runway/airport reference point while their geometry centers were about 1.6 km away in model space. Direct conversion produced objects over the runway. Recentered models placed at their transformed centers restored the intended south-side building and fence corridor.
 
 ## Large Rectangular Shadow
 
@@ -114,5 +145,7 @@ Longer visibility increases rendering and texture-memory pressure. Start at 20 k
 - Airport surface is flat at the intended elevation; buildings are not buried or floating.
 - Ground imagery is visible, correctly oriented, correctly mapped, and present at the desired distance.
 - Day/night textures and alpha render correctly.
+- No airport-reference-point model has a suspicious far-from-origin geometry center; transformed footprints match their intended sites.
+- Every non-opaque source texture has a recorded material-intent classification, and opaque architectural DXT payloads contain zero transparent pixels.
 - Test once with ground scenery shadows enabled and once disabled.
 - Restart FS2004 after replacing BGLs to avoid judging cached scenery.

@@ -42,3 +42,7 @@ Test each path with a read-only existence check before proceeding. Search user-p
 ## Texture Rules
 
 Decode DDS with Pillow, convert to RGBA, flip vertically, resize dimensions above 1024 with aspect ratio preserved, then call ImageTool with mipmap generation. Use DXT1 for opaque/binary-alpha textures and DXT3 for variable alpha. A full 1024x1024 DXT1 extended BMP data payload is about 699,048 bytes and demonstrates mip levels down to 4x4; do not diagnose missing mipmaps from distant disappearance without checking both file size and SCA visibility.
+
+## BGLComp Model Paths And Success Checks
+
+For FS2004 ModelData XML, prefer short `sourceFile` paths relative to the XML directory (for example `mdl\terminal.mdl`). Resolve and verify each file from that directory before compilation. Some old BGLComp builds prepend the XML directory to absolute paths and may reject long path strings. Do not treat exit code zero or a nonempty file as sufficient success: inspect the complete log and verify expected model/placement content; a 56-byte empty header is not a valid model library. Apply the necessary-recompilation discipline in SKILL.md if this validation fails.

@@ -35,6 +35,8 @@ Use this during the first conversion pass for every FSX model, before any BGLCom
 - Require the finalized GUID mapping, finalized placements, unchanged final BMP hashes, byte-identical non-target MDLs, no final `.dds` reference, and complete records of every BGLComp attempt, a clean latest successful build, and renewed verification after necessary recompilation.
 - Archive only the package-local `SCENERY.dat`, restart FS2004 completely, and test daytime building/building and cloud/building order plus night lighting.
 
+Run the applicable [geometry, alpha and alignment gates](geometry-texture-audits.md) after a split, projection or component-grouping repair. `One/Zero` checks do not establish UV lineage or component placement. Compile-only opaque PNG hints remain separate from final BMP alpha, especially invisible seasonal layers.
+
 ## Proven Non-Fixes
 
 - Making final BMP files opaque does not change an MDL that remains in the transparent render queue.

@@ -46,3 +46,6 @@ Decode DDS with Pillow, convert to RGBA, flip vertically, resize dimensions abov
 ## BGLComp Model Paths And Success Checks
 
 For FS2004 ModelData XML, prefer short `sourceFile` paths relative to the XML directory (for example `mdl\terminal.mdl`). Resolve and verify each file from that directory before compilation. Some old BGLComp builds prepend the XML directory to absolute paths and may reject long path strings. Do not treat exit code zero or a nonempty file as sufficient success: inspect the complete log and verify expected model/placement content; a 56-byte empty header is not a valid model library. Apply the necessary-recompilation discipline in SKILL.md if this validation fails.
+
+
+Before processing existing BMPs, perform the [raw-alpha and encoder audit](geometry-texture-audits.md#texture-alpha-and-orientation), including BI_RGB32 BGRA, all-zero alpha and native reverse decoding. Preserve the native rectangular mip layout. Before recentering or splitting FSX geometry, perform the [shared-index and target-coordinate audits](geometry-texture-audits.md); a clean compiler exit, compatible BGL header or ECEF round-trip does not establish target-renderer alignment.

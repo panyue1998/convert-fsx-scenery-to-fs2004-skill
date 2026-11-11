@@ -1,6 +1,6 @@
 # Preventive Checks, Runtime Diagnosis, And Proven Decisions
 
-Run the first six sections as build-time gates on every conversion. Do not wait for the user to report missing airport data, wrong elevation, white textures, inverted textures, material mismatch, or short ground draw distance. The rectangular-shadow section remains a runtime diagnosis because FS2004's renderer decides that behavior.
+Apply the relevant prevention sections as build-time gates during their governing workflow steps. Do not wait for the user to report missing airport data, wrong elevation, white textures, inverted textures, material mismatch, or short ground draw distance. The rectangular-shadow section remains a runtime diagnosis because FS2004's renderer decides that behavior.
 
 ## Prevent Missing Airport List Entry Or Surfaces
 
@@ -22,10 +22,11 @@ Mandatory build-time action:
 - Confirm airport elevation from complete airport XML and model placements.
 - Build a conservative FS2004-compatible flatten covering the airport operational area at that elevation.
 - Test terminal and apron elevations. Do not shift every model to hide one bad placement.
+- Check first-loaded airport datum and curved ground vertices separately; a correct flatten can still cover below-plane polygons at close range. See [ground curvature and height](geometry-texture-audits.md#ground-curvature-and-height).
 
 ## Prevent White Ground Textures
 
-Cause: legacy ground BGL embeds `.dds` names while FS2004 output contains `.bmp`, or BMP encoding is unsupported.
+Possible causes: legacy `.dds` references versus output `.bmp`, unsupported encoding, lost meaningful BMP alpha or an unintended visible overlay. White polygons do not prove missing files.
 
 Mandatory build-time action:
 
@@ -33,6 +34,7 @@ Mandatory build-time action:
 - Rewrite quoted `.dds` references to `.bmp` with `rewrite_sca_textures.py`.
 - Compile with SCASM and verify no final BGL contains `.dds` strings.
 - Verify each BMP uses DXT1/DXT3 extended BMP encoding and power-of-two dimensions no larger than 1024.
+- Audit raw BI_RGB32 alpha and intentionally invisible seasonal placeholders, then check compressed alpha independently. ImageTool can discard all-zero TGA alpha. Follow [texture alpha and orientation](geometry-texture-audits.md#texture-alpha-and-orientation) before hiding AFCAD surfaces or changing parking widths.
 
 ## Prevent Upside-Down Textures
 
@@ -50,7 +52,7 @@ Mandatory build-time action:
 - Detect duplicate stems before conversion.
 - Inspect a DAE export and material list for the affected model.
 - Confirm day and `_LM` textures remain paired.
-- Do not remap UV coordinates automatically unless the converted geometry demonstrably differs from the source.
+- Verify immutable shared-offset remapping and original attribute lineage through multiple splits. A position pass can hide UV corruption; use [joint attribute checks](geometry-texture-audits.md#immutable-shared-index-splitting). Do not guess UV offsets or flip UVs to compensate for unverified texture orientation.
 
 ## Prevent Missing Buildings
 
@@ -97,7 +99,7 @@ Mandatory build-time action:
 
 - Preserve lat/lon/altitudeIsAgl/alt/heading/pitch/bank/scale from the decoded placement record.
 - Validate several known buildings against the source placement data before compiling the final placement BGL.
-- Treat a systematic rotation or offset as a placement-decoder bug. Fix the conversion math and rebuild the placement BGL; do not manually rotate individual buildings unless only one source placement is demonstrably wrong.
+- Treat systematic rotation or offset as a conversion-math defect. Verify placement decoding and source/target projection before manual adjustments. An ECEF round-trip can still leave FS2004 seams displaced. Follow [coordinate frames and component coherence](geometry-texture-audits.md#coordinate-frames-and-component-coherence), including complete-object grouping and correct lamp/glow matching.
 
 ### Prevent airport-reference-point models from appearing over a runway
 
@@ -108,8 +110,8 @@ Mandatory procedure:
 1. Flag every single-model BGL whose lone placement equals or nearly equals the airport reference point, especially `VERY_SPARSE` objects and files representing roads, fences, or building rows.
 2. Export the source BGL to DAE and calculate bounds from position arrays only; do not include normals, UVs, colors, or animation values.
 3. Compute the local bounding-box center `(cx, cy)` and its distance from `(0,0)`. Investigate offsets of hundreds of metres; reject kilometre-scale offsets for direct FS2004 installation.
-4. Convert the local center through the original placement heading. With local `x` east/right and `y` north/forward, use the verified model-axis convention from representative source placements; then convert east/north metres to latitude/longitude at the airport latitude.
-5. Subtract the same `(cx, cy)` from every geometry position array. Do not change UVs, normals, materials, node transforms, animation keys, or relative geometry.
+4. Convert the local center through the original placement heading. With local `x` east/right and `y` north/forward, use the verified model-axis convention from representative source placements; then convert using the verified source/target conventions in [the coordinate audit](geometry-texture-audits.md#coordinate-frames-and-component-coherence).
+5. For pure translation within one frame, subtract the same `(cx, cy)` from every position array and preserve the other attributes. If changing frame/projection, transform positions and normals consistently while preserving UVs, materials, animation relationships and geographic footprint. Do not mix projection conversion with unexplained manual offsets.
 6. Compile the recentered model under a new GUID and compile a separate placement at the transformed geodetic center. Preserve heading, scale, image complexity, and the intended AGL/MSL mode; usually use AGL `0` for a grounded rebuilt object after confirming the flatten.
 7. Verify transformed min/max corners cover the intended site and no longer cross the runway. Audit adjacent reference-point BGLs for the same authoring pattern.
 
@@ -144,7 +146,8 @@ Longer visibility increases rendering and texture-memory pressure. Start at 20 k
 - Runway, starts, taxi network, parking, and aprons are present.
 - Airport surface is flat at the intended elevation; buildings are not buried or floating.
 - Ground imagery is visible, correctly oriented, correctly mapped, and present at the desired distance.
-- Day/night textures and alpha render correctly.
+- Day/night textures and alpha render correctly, including invisible seasonal placeholders.
+- Low/close views retain custom ground; vehicle bodies/interiors, building/glass seams and dusk/night lights remain aligned. File checks and projection estimates do not replace runtime observations.
 - No airport-reference-point model has a suspicious far-from-origin geometry center; transformed footprints match their intended sites.
 - Every non-opaque source texture has a recorded material-intent classification, and opaque architectural DXT payloads contain zero transparent pixels.
 - Test once with ground scenery shadows enabled and once disabled.
